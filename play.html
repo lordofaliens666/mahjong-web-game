@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Table — Jade Parlour</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@500;600;700&family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+<style>
+  html, body { height: 100%; }
+  body { background: #302b1a; }
+  .table-nav {
+    height: 56px; display: flex; align-items: center; justify-content: space-between;
+    padding: 0 28px; background: #302b1a; border-bottom: 1px solid rgba(242,240,232,.1);
+  }
+  .table-nav a { color: #f2f0e8; text-decoration: none; font-size: 13px; font-weight: 600; }
+  .table-nav .brand { font-family: 'Cormorant Garamond', serif; font-weight: 700; font-size: 18px; color: #f2f0e8; }
+
+  .table-wrap { display: flex; height: calc(100vh - 56px); }
+  .felt {
+    flex: 1; position: relative; overflow: hidden;
+    background: radial-gradient(120% 100% at 50% 50%, #5c6b3f, #3a4529);
+  }
+
+  .wall-badge {
+    position: absolute; top: 16px; left: 16px; display: flex; align-items: center; gap: 8px;
+    background: rgba(48,43,26,.5); padding: 6px 12px; border-radius: 14px;
+  }
+  .wall-badge .glyph { font-family: 'Noto Serif SC', serif; color: var(--gold); font-weight: 700; font-size: 15px; }
+  .wall-badge .count { font-size: 11.5px; color: #f2f0e8; }
+
+  .seat { position: absolute; display: flex; align-items: center; gap: 10px; }
+  .seat-top { top: 26px; left: 0; right: 0; flex-direction: column; }
+  .seat-bottom { bottom: 26px; left: 0; right: 0; flex-direction: column-reverse; }
+  .seat-left { left: 20px; top: 50%; transform: translateY(-50%); flex-direction: column; }
+  .seat-right { right: 20px; top: 50%; transform: translateY(-50%); flex-direction: column; }
+
+  .seat-tiles { display: flex; gap: 3px; }
+  .seat-tiles.vertical { flex-direction: column; gap: 2px; }
+  .seat-meld { display: flex; gap: 10px; }
+  .meld-group { display: flex; gap: 1px; }
+
+  .seat-tag {
+    display: flex; align-items: center; gap: 8px; padding: 5px 12px; border-radius: 14px;
+    background: rgba(48,43,26,.5); font-size: 12px; color: #f2f0e8; font-weight: 600; white-space: nowrap;
+  }
+  .seat-tag.turn { background: rgba(201,162,74,.9); color: #302b1a; font-weight: 800; }
+  .seat-avatar { width: 26px; height: 26px; border-radius: 50%; flex: none; }
+
+  .discard-pile {
+    position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    display: grid; grid-template-columns: repeat(8, 30px); gap: 4px;
+    background: rgba(48,43,26,.32); padding: 14px; border-radius: 12px;
+    max-width: 320px;
+  }
+
+  .action-row {
+    position: absolute; bottom: 210px; left: 50%; transform: translateX(-50%);
+    display: flex; gap: 10px; z-index: 5;
+  }
+  .action-btn {
+    padding: 12px 22px; border-radius: 24px; border: none; font-weight: 700; font-size: 13px; cursor: pointer;
+    color: #f2f0e8;
+  }
+  .action-btn:disabled { opacity: .3; cursor: not-allowed; }
+  .action-btn.pass { background: rgba(242,240,232,.15); }
+  .action-btn.chi { background: var(--olive); }
+  .action-btn.pong { background: var(--brown); }
+  .action-btn.kong { background: var(--plum-dark); }
+  .action-btn.win { background: linear-gradient(180deg, #dab863, var(--gold)); color: var(--ink); padding: 12px 26px; font-weight: 800; }
+
+  .hand-hint {
+    position: absolute; bottom: 168px; left: 50%; transform: translateX(-50%);
+    font-size: 11.5px; color: rgba(242,240,232,.6); z-index: 5;
+  }
+
+  .side-panel {
+    width: 260px; background: var(--card); border-left: 1px solid rgba(48,43,26,.1);
+    padding: 22px; display: flex; flex-direction: column; gap: 16px; overflow-y: auto;
+  }
+  .side-label { font-size: 11px; letter-spacing: .14em; color: var(--brown); text-transform: uppercase; }
+  .log-list { display: flex; flex-direction: column; gap: 8px; font-size: 12.5px; color: var(--ink); }
+  .log-list b { font-weight: 700; }
+  .scores-box { margin-top: auto; border-radius: 12px; background: #fff; border: 1px solid rgba(48,43,26,.08); padding: 14px; }
+  .score-row { display: flex; justify-content: space-between; font-size: 12.5px; color: var(--ink); margin-bottom: 6px; }
+  .score-row:last-child { margin-bottom: 0; }
+  .score-row .pos { font-weight: 700; color: var(--olive); }
+  .score-row .neg { color: var(--plum); }
+
+  .round-over-overlay {
+    position: fixed; inset: 0; background: rgba(48,43,26,.55); display: none;
+    align-items: center; justify-content: center; z-index: 20;
+  }
+  .round-over-overlay.show { display: flex; }
+  .round-over-card {
+    background: var(--card); border-radius: 16px; padding: 32px 40px; max-width: 380px; text-align: center;
+  }
+  .round-over-card h2 { font-family: 'Cormorant Garamond', serif; font-size: 30px; margin: 0 0 10px; color: var(--ink); }
+  .round-over-card p { font-size: 13.5px; color: var(--brown); margin: 0 0 20px; line-height: 1.6; }
+</style>
+</head>
+<body>
+
+<div class="table-nav">
+  <a href="lobby.html">← Leave Table</a>
+  <span class="brand">Jade Parlour</span>
+  <span style="width:60px"></span>
+</div>
+
+<div class="table-wrap">
+  <div class="felt" id="felt">
+    <div class="wall-badge"><span class="glyph">東</span><span class="count" id="wall-count">Wall: 0 left</span></div>
+
+    <div class="seat seat-top" id="seat-tag-S-wrap">
+      <div class="seat-tiles" id="tiles-S"></div>
+      <div class="seat-meld" id="meld-S"></div>
+      <div class="seat-tag" id="tag-S"><div class="seat-avatar" style="background:#9fa764"></div><span>Amir · South</span></div>
+    </div>
+
+    <div class="seat seat-left" id="seat-tag-W-wrap">
+      <div class="seat-tiles vertical" id="tiles-W"></div>
+      <div class="seat-meld" id="meld-W"></div>
+      <div class="seat-tag" id="tag-W"><div class="seat-avatar" style="background:#613c4e"></div><span>Su Mei · West</span></div>
+    </div>
+
+    <div class="seat seat-right" id="seat-tag-N-wrap">
+      <div class="seat-tiles vertical" id="tiles-N"></div>
+      <div class="seat-meld" id="meld-N"></div>
+      <div class="seat-tag" id="tag-N"><div class="seat-avatar" style="background:#816a60"></div><span>Farid · North</span></div>
+    </div>
+
+    <div class="discard-pile" id="discard-pile"></div>
+
+    <p class="hand-hint" id="hand-hint"></p>
+    <div class="action-row" id="action-row">
+      <button class="action-btn pass" id="btn-pass">Pass</button>
+      <button class="action-btn chi" id="btn-chi">Chi</button>
+      <button class="action-btn pong" id="btn-pong">Pong</button>
+      <button class="action-btn kong" id="btn-kong">Kong</button>
+      <button class="action-btn win" id="btn-win">WIN</button>
+    </div>
+
+    <div class="seat seat-bottom" id="seat-tag-E-wrap">
+      <div class="seat-tiles" id="tiles-E"></div>
+      <div class="seat-meld" id="meld-E"></div>
+      <div class="seat-tag" id="tag-E"><div class="seat-avatar" style="background:#613c4e;border:2px solid #302b1a"></div><span>You · East</span></div>
+    </div>
+  </div>
+
+  <div class="side-panel">
+    <div class="side-label">Game Log</div>
+    <div class="log-list" id="log-list"></div>
+    <div class="scores-box">
+      <div class="side-label" style="margin-bottom:8px">Scores</div>
+      <div id="scores-list"></div>
+    </div>
+  </div>
+</div>
+
+<div class="round-over-overlay" id="round-over">
+  <div class="round-over-card">
+    <h2 id="round-over-title">Round Over</h2>
+    <p id="round-over-desc"></p>
+    <button class="btn btn-primary" id="btn-play-again">Play Again</button>
+  </div>
+</div>
+
+<script type="module" src="js/game.js"></script>
+</body>
+</html>
