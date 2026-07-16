@@ -1,3 +1,5 @@
+import { AVATAR_OPTIONS, avatarSVG, getAvatarId, setAvatarId, getAvatarOption } from './avatars.js';
+
 const STATS_KEY = 'mahjongProfileStats';
 const DEFAULT_STATS = { gamesPlayed: 0, gamesWon: 0 };
 
@@ -26,12 +28,18 @@ export function mountProfileModal() {
   const trigger = document.getElementById('nav-avatar-btn');
   if (!trigger) return;
 
+  trigger.innerHTML = avatarSVG(getAvatarOption());
+
   const overlay = document.createElement('div');
   overlay.className = 'modal-overlay';
   overlay.innerHTML = `
     <div class="modal-card">
       <h2>Guest Player</h2>
       <p class="modal-sub">You're playing as East — no account needed for this prototype.</p>
+      <div class="modal-section">
+        <div class="modal-section-label">Profile Icon</div>
+        <div class="swatch-row" id="avatar-options"></div>
+      </div>
       <div class="modal-section">
         <div class="modal-section-label">Lifetime Stats</div>
         <div id="profile-stats"></div>
@@ -44,6 +52,27 @@ export function mountProfileModal() {
   `;
   document.body.appendChild(overlay);
 
+  const avatarRow = overlay.querySelector('#avatar-options');
+  for (const option of AVATAR_OPTIONS) {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'avatar-swatch';
+    btn.title = `${option.name} · ${option.hanzi}`;
+    btn.dataset.avatar = option.id;
+    btn.innerHTML = avatarSVG(option);
+    btn.addEventListener('click', () => {
+      setAvatarId(option.id);
+      trigger.innerHTML = avatarSVG(option);
+      renderActiveAvatar();
+    });
+    avatarRow.appendChild(btn);
+  }
+
+  function renderActiveAvatar() {
+    const current = getAvatarId();
+    avatarRow.querySelectorAll('.avatar-swatch').forEach((el) => el.classList.toggle('active', el.dataset.avatar === current));
+  }
+
   function renderStats() {
     const stats = getStats();
     const winRate = stats.gamesPlayed ? Math.round((stats.gamesWon / stats.gamesPlayed) * 100) : 0;
@@ -54,7 +83,7 @@ export function mountProfileModal() {
     `;
   }
 
-  trigger.addEventListener('click', () => { renderStats(); overlay.classList.add('show'); });
+  trigger.addEventListener('click', () => { renderActiveAvatar(); renderStats(); overlay.classList.add('show'); });
   overlay.querySelector('#profile-close').addEventListener('click', () => overlay.classList.remove('show'));
   overlay.querySelector('#profile-reset').addEventListener('click', () => { resetStats(); renderStats(); });
   overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.classList.remove('show'); });

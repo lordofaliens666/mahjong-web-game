@@ -59,7 +59,8 @@ a { color: inherit; }
 .nav-icon-btn:hover { background: rgba(48, 43, 26, .14); }
 .nav-avatar-btn {
   width: 38px; height: 38px; border-radius: 50%; background: var(--olive-light);
-  border: none; cursor: pointer; padding: 0;
+  border: none; cursor: pointer; padding: 7px; display: flex; align-items: center;
+  justify-content: center; overflow: hidden;
 }
 
 .modal-overlay {
@@ -81,6 +82,13 @@ a { color: inherit; }
 .swatch-row { display: flex; gap: 10px; flex-wrap: wrap; }
 .swatch { width: 44px; height: 44px; border-radius: 10px; border: 2px solid transparent; cursor: pointer; padding: 0; }
 .swatch.active { border-color: var(--ink); }
+.avatar-swatch {
+  width: 48px; height: 48px; border-radius: 50%; border: 2px solid rgba(48, 43, 26, .1);
+  cursor: pointer; padding: 8px; background: var(--cream); display: flex;
+  align-items: center; justify-content: center; overflow: hidden;
+}
+.avatar-swatch.active { border-color: var(--plum); border-width: 2.5px; }
+.avatar-swatch:hover { border-color: var(--brown); }
 .segmented { display: flex; background: #e2ddcf; border-radius: 16px; padding: 3px; gap: 2px; }
 .segmented button { flex: 1; padding: 7px 10px; border-radius: 14px; border: none; background: transparent; color: var(--ink); font-size: 12px; cursor: pointer; }
 .segmented button.active { background: var(--plum); color: #fff; font-weight: 700; }
