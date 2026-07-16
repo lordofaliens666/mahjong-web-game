@@ -39,6 +39,8 @@ const els = {
 
 function delay(ms) { return new Promise((res) => setTimeout(res, ms * botDelayMultiplier())); }
 
+function isMobileLayout() { return window.innerWidth <= 640; }
+
 function setupRulesetUi() {
   els.tableBrand.textContent = `Jade Parlour · ${RULESET_LABEL[ruleset]}`;
   if (ruleset !== 'american') return;
@@ -53,14 +55,16 @@ function setupRulesetUi() {
 }
 
 function render() {
+  const mobile = isMobileLayout();
   els.wallCount.textContent = `Wall: ${game.wall.length} left`;
 
   for (const seat of SEATS) {
     const player = game.players[seat];
     els.tiles[seat].innerHTML = '';
     if (seat === 'E') {
+      const handSize = mobile ? { w: 34, h: 47 } : { w: 42, h: 58 };
       for (const tile of sortHand(player.hand)) {
-        const el = createTileElement(tile, { w: 42, h: 58 });
+        const el = createTileElement(tile, handSize);
         if (awaitingHumanDiscard) {
           el.style.cursor = 'pointer';
           el.addEventListener('click', () => onHumanDiscard(tile.id));
@@ -69,6 +73,15 @@ function render() {
         }
         els.tiles[seat].appendChild(el);
       }
+    } else if (mobile) {
+      // Compact summary instead of one tile per card — an unbounded stack
+      // of individual tiles doesn't fit the vertical space on a phone.
+      const back = createTileElement({ kind: 'dot' }, { w: 22, h: 30, faceDown: true });
+      els.tiles[seat].appendChild(back);
+      const count = document.createElement('span');
+      count.className = 'hand-count';
+      count.textContent = `×${player.hand.length}`;
+      els.tiles[seat].appendChild(count);
     } else {
       for (let i = 0; i < player.hand.length; i++) {
         const el = createTileElement({ kind: 'dot' }, { w: 26, h: 36, faceDown: true });
@@ -79,10 +92,11 @@ function render() {
     }
 
     els.melds[seat].innerHTML = '';
+    const meldSize = mobile ? { w: 19, h: 26 } : { w: 24, h: 33 };
     for (const meld of player.melds) {
       const group = document.createElement('div');
       group.className = 'meld-group';
-      for (const t of meld.tiles) group.appendChild(createTileElement(t, { w: 24, h: 33 }));
+      for (const t of meld.tiles) group.appendChild(createTileElement(t, meldSize));
       els.melds[seat].appendChild(group);
     }
 
@@ -93,8 +107,9 @@ function render() {
   }
 
   els.discardPile.innerHTML = '';
+  const discardSize = mobile ? { w: 20, h: 28 } : { w: 30, h: 42 };
   for (const { tile } of game.discardPile.slice(-24)) {
-    els.discardPile.appendChild(createTileElement(tile, { w: 30, h: 42 }));
+    els.discardPile.appendChild(createTileElement(tile, discardSize));
   }
 
   els.logList.innerHTML = '';
@@ -269,6 +284,12 @@ els.btnPong.addEventListener('click', onBtnPong);
 els.btnKong.addEventListener('click', onBtnKong);
 els.btnChi.addEventListener('click', onBtnChi);
 els.btnPlayAgain.addEventListener('click', startRound);
+
+let resizeTimer;
+window.addEventListener('resize', () => {
+  clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(() => { if (game) render(); }, 150);
+});
 
 setupRulesetUi();
 startRound();

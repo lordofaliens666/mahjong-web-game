@@ -36,6 +36,14 @@
   .table-meta { font-size: 12px; color: var(--brown); margin-bottom: 14px; }
   .join-btn { width: 100%; padding: 9px; border-radius: 8px; border: none; background: var(--plum); color: #fff; font-weight: 700; font-size: 12.5px; cursor: pointer; }
   .join-btn:disabled { border: 1px solid rgba(48, 43, 26, .15); background: transparent; color: var(--brown); cursor: default; }
+
+  @media (max-width: 640px) {
+    .lobby { flex-direction: column; min-height: auto; }
+    .sidebar { width: 100%; border-right: none; border-bottom: 1px solid rgba(48, 43, 26, .08); padding: 20px; }
+    .create-btn { margin-top: 16px; }
+    .tables { padding: 20px; }
+    .tables-grid { grid-template-columns: 1fr; }
+  }
 </style>
 </head>
 <body>

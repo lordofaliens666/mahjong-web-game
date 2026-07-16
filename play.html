@@ -60,8 +60,7 @@
   }
 
   .action-row {
-    position: absolute; bottom: 210px; left: 50%; transform: translateX(-50%);
-    display: flex; gap: 10px; z-index: 5;
+    display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; z-index: 5;
   }
   .action-btn {
     padding: 12px 22px; border-radius: 24px; border: none; font-weight: 700; font-size: 13px; cursor: pointer;
@@ -75,8 +74,7 @@
   .action-btn.win { background: linear-gradient(180deg, #dab863, var(--gold)); color: var(--ink); padding: 12px 26px; font-weight: 800; }
 
   .hand-hint {
-    position: absolute; bottom: 168px; left: 50%; transform: translateX(-50%);
-    font-size: 11.5px; color: rgba(242,240,232,.6); z-index: 5;
+    font-size: 11.5px; color: rgba(242,240,232,.6); z-index: 5; margin: 0;
   }
 
   .side-panel {
@@ -106,6 +104,44 @@
   }
   .round-over-card h2 { font-family: 'Cormorant Garamond', serif; font-size: 30px; margin: 0 0 10px; color: var(--ink); }
   .round-over-card p { font-size: 13.5px; color: var(--brown); margin: 0 0 20px; line-height: 1.6; }
+
+  .hand-count {
+    color: #f2f0e8; font-size: 11.5px; font-weight: 700; background: rgba(48,43,26,.4);
+    padding: 2px 7px; border-radius: 8px; flex: none;
+  }
+
+  @media (max-width: 640px) {
+    .table-nav { padding: 0 12px; }
+    .table-nav .brand { font-size: 14px; }
+    .table-nav a { font-size: 12px; }
+
+    .table-wrap { flex-direction: column; height: auto; min-height: calc(100vh - 56px); }
+    .felt { flex: none; height: 60vh; min-height: 400px; }
+    .side-panel { width: 100%; max-height: 240px; border-left: none; border-top: 1px solid rgba(48,43,26,.1); padding: 16px; }
+
+    .seat-left, .seat-right { gap: 6px; }
+    .seat-left { left: 8px; }
+    .seat-right { right: 8px; }
+    .seat-top { top: 10px; }
+    .seat-bottom { bottom: 10px; gap: 6px; }
+    .seat-tiles.vertical { flex-direction: row; }
+    .seat-tag { padding: 4px 9px; font-size: 11px; gap: 6px; }
+    .seat-avatar { width: 20px; height: 20px; }
+
+    .wall-badge { padding: 5px 9px; top: 8px; left: 8px; }
+    .wall-badge .count { font-size: 10.5px; }
+
+    .discard-pile { grid-template-columns: repeat(6, 20px); gap: 3px; padding: 10px; max-width: 220px; }
+
+    #tiles-E {
+      max-width: 100vw; overflow-x: auto; -webkit-overflow-scrolling: touch;
+      padding: 2px 4px 6px; justify-content: flex-start;
+    }
+    .action-row { gap: 6px; }
+    .action-btn { padding: 8px 14px; font-size: 11.5px; }
+    .action-btn.win { padding: 8px 16px; }
+    .hand-hint { font-size: 10.5px; }
+  }
 </style>
 </head>
 <body>
@@ -144,19 +180,18 @@
 
     <div class="discard-pile" id="discard-pile"></div>
 
-    <p class="hand-hint" id="hand-hint"></p>
-    <div class="action-row" id="action-row">
-      <button class="action-btn pass" id="btn-pass">Pass</button>
-      <button class="action-btn chi" id="btn-chi">Chi</button>
-      <button class="action-btn pong" id="btn-pong">Pong</button>
-      <button class="action-btn kong" id="btn-kong">Kong</button>
-      <button class="action-btn win" id="btn-win">WIN</button>
-    </div>
-
     <div class="seat seat-bottom" id="seat-tag-E-wrap">
       <div class="seat-tiles" id="tiles-E"></div>
       <div class="seat-meld" id="meld-E"></div>
       <div class="seat-tag" id="tag-E"><div class="seat-avatar" style="background:#613c4e;border:2px solid #302b1a"></div><span>You · East</span></div>
+      <div class="action-row" id="action-row">
+        <button class="action-btn pass" id="btn-pass">Pass</button>
+        <button class="action-btn chi" id="btn-chi">Chi</button>
+        <button class="action-btn pong" id="btn-pong">Pong</button>
+        <button class="action-btn kong" id="btn-kong">Kong</button>
+        <button class="action-btn win" id="btn-win">WIN</button>
+      </div>
+      <p class="hand-hint" id="hand-hint"></p>
     </div>
   </div>
 
