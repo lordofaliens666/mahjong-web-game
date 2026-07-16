@@ -3,8 +3,16 @@
 import { buildWall, shuffle, tileName } from './tiles.js';
 
 export const SEATS = ['E', 'S', 'W', 'N'];
-export const SEAT_NAME = { E: 'You', S: 'Amir', W: 'Su Mei', N: 'Farid' };
 export const SEAT_WIND = { E: '東', S: '南', W: '西', N: '北' };
+
+const BOT_NAME_POOL = [
+  'Amir', 'Su Mei', 'Farid', 'Wei Ling', 'Rajesh', 'Nadia',
+  'Kenji', 'Priya', 'Marcus', 'Elena', 'Hassan', 'Mei Ann',
+];
+
+function randomBotNames() {
+  return shuffle([...BOT_NAME_POOL]).slice(0, 3);
+}
 
 function seatAfter(seat) {
   return SEATS[(SEATS.indexOf(seat) + 1) % 4];
@@ -81,10 +89,12 @@ export class MahjongGame {
     this.pendingCall = null; // {seat:'E', tile, discarderSeat, options}
     this.currentSeat = 'E';
     this.players = {};
+    const botNames = randomBotNames();
+    const nameBySeat = { E: 'You', S: botNames[0], W: botNames[1], N: botNames[2] };
     for (const seat of SEATS) {
       this.players[seat] = {
         seat,
-        name: SEAT_NAME[seat],
+        name: nameBySeat[seat],
         isHuman: seat === 'E',
         hand: [],
         melds: [],

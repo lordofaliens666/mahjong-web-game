@@ -7,6 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@500;600;700&family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/style.css">
+<script type="module" src="js/boot-theme.js"></script>
 <style>
   html, body { height: 100%; }
   body { background: #302b1a; }
@@ -16,6 +17,9 @@
   }
   .table-nav a { color: #f2f0e8; text-decoration: none; font-size: 13px; font-weight: 600; }
   .table-nav .brand { font-family: 'Cormorant Garamond', serif; font-weight: 700; font-size: 18px; color: #f2f0e8; }
+  .table-nav .nav-actions { gap: 10px; }
+  .table-nav .nav-icon-btn { background: rgba(242, 240, 232, .12); color: #f2f0e8; }
+  .table-nav .nav-icon-btn:hover { background: rgba(242, 240, 232, .2); }
 
   .table-wrap { display: flex; height: calc(100vh - 56px); }
   .felt {
@@ -105,7 +109,11 @@
 <div class="table-nav">
   <a href="lobby.html">← Leave Table</a>
   <span class="brand">Jade Parlour</span>
-  <span style="width:60px"></span>
+  <div class="nav-actions">
+    <a href="rules.html" target="_blank" rel="noopener" title="Open rules in a new tab" style="margin-right:4px">Rules</a>
+    <button class="nav-icon-btn" id="nav-settings-btn" type="button" title="Settings" aria-label="Settings">⚙</button>
+    <button class="nav-avatar-btn" id="nav-avatar-btn" type="button" title="Profile" aria-label="Profile"></button>
+  </div>
 </div>
 
 <div class="table-wrap">
@@ -167,5 +175,11 @@
 </div>
 
 <script type="module" src="js/game.js"></script>
+<script type="module">
+  import { mountProfileModal } from './js/profile.js';
+  import { mountSettingsModal } from './js/settings.js';
+  mountProfileModal();
+  mountSettingsModal();
+</script>
 </body>
 </html>

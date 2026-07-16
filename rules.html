@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rules — Jade Parlour</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@500;600;700&family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+<script type="module" src="js/boot-theme.js"></script>
+<style>
+  .rules-wrap { max-width: 720px; margin: 0 auto; padding: 48px 32px 80px; }
+  .rules-wrap h1 { font-family: 'Cormorant Garamond', serif; font-size: 40px; margin: 0 0 8px; }
+  .rules-wrap .lede { color: var(--brown); font-size: 14px; margin: 0 0 40px; line-height: 1.6; }
+  .rules-section { margin-bottom: 36px; }
+  .rules-section h2 {
+    font-family: 'Cormorant Garamond', serif; font-size: 22px; margin: 0 0 12px; color: var(--plum);
+    border-bottom: 1px solid rgba(48,43,26,.1); padding-bottom: 8px;
+  }
+  .rules-section p, .rules-section li { font-size: 14px; line-height: 1.7; color: var(--ink); }
+  .rules-section ul { margin: 0; padding-left: 20px; }
+  .tai-table { width: 100%; border-collapse: collapse; font-size: 13.5px; margin-top: 8px; }
+  .tai-table th, .tai-table td { text-align: left; padding: 8px 10px; border-bottom: 1px solid rgba(48,43,26,.08); }
+  .tai-table th { color: var(--brown); font-weight: 600; font-size: 11.5px; letter-spacing: .05em; text-transform: uppercase; }
+  .note-box {
+    background: var(--card); border: 1px solid rgba(48,43,26,.08); border-radius: 10px;
+    padding: 14px 18px; font-size: 13px; color: var(--brown); line-height: 1.6;
+  }
+</style>
+</head>
+<body>
+
+<div class="nav">
+  <a class="nav-name" href="index.html" style="text-decoration:none">Jade Parlour</a>
+  <div class="nav-links"><a href="lobby.html">Play</a><a href="rules.html" class="active">Rules</a></div>
+  <div class="nav-actions">
+    <button class="nav-icon-btn" id="nav-settings-btn" type="button" title="Settings" aria-label="Settings">⚙</button>
+    <button class="nav-avatar-btn" id="nav-avatar-btn" type="button" title="Profile" aria-label="Profile"></button>
+  </div>
+</div>
+
+<div class="rules-wrap">
+  <h1>How to Play</h1>
+  <p class="lede">Jade Parlour plays a simplified version of Singapore-style mahjong. You sit East; three AI opponents fill South, West, and North.</p>
+
+  <div class="rules-section">
+    <h2>Objective</h2>
+    <p>Be the first to complete a winning hand: <strong>four sets</strong> (a triplet or a run of three) plus <strong>one pair</strong>, using 14 tiles total. You can win by drawing the final tile yourself (a self-draw) or by claiming someone else's discard.</p>
+  </div>
+
+  <div class="rules-section">
+    <h2>The Tiles</h2>
+    <ul>
+      <li><strong>Circles, Bamboo, Myriad</strong> — three suits, numbered 1–9, four copies each.</li>
+      <li><strong>Winds</strong> — East, South, West, North, four copies each.</li>
+      <li><strong>Dragons</strong> — Red, Green, White, four copies each.</li>
+      <li><strong>Flowers</strong> — 8 bonus tiles. Drawing one doesn't count toward your hand — it's set aside and you immediately draw a replacement.</li>
+    </ul>
+  </div>
+
+  <div class="rules-section">
+    <h2>Turn Flow</h2>
+    <p>On your turn you draw a tile, then discard one. Play passes East → South → West → North → East. After any discard, other players may interrupt the normal turn order to call it:</p>
+    <ul>
+      <li><strong>Pong</strong> — claim a discard to complete a triplet, if you hold a matching pair. Anyone can call it.</li>
+      <li><strong>Kong</strong> — claim a discard to complete a foursome, if you hold three matching tiles. You immediately draw a replacement tile.</li>
+      <li><strong>Chi</strong> — claim a discard to complete a run (sequence), if you hold two adjacent tiles. Only the player seated immediately after the discarder may call it.</li>
+      <li><strong>Win</strong> — claim a discard (or your own draw) to complete your hand.</li>
+    </ul>
+    <p>When more than one call is possible on the same discard, priority is <strong>Win &gt; Kong &gt; Pong &gt; Chi</strong>.</p>
+  </div>
+
+  <div class="rules-section">
+    <h2>Scoring (simplified)</h2>
+    <p>Winning hands are scored in <strong>tai</strong> (points of value), then converted to game points. This is a simplified subset of official Singapore scoring rules — not the full rule book.</p>
+    <table class="tai-table">
+      <tr><th>Condition</th><th>Tai</th></tr>
+      <tr><td>Base hand</td><td>1</td></tr>
+      <tr><td>Self-drawn win</td><td>+1</td></tr>
+      <tr><td>Fully concealed hand (no calls made)</td><td>+1</td></tr>
+      <tr><td>All triplets (no sequences)</td><td>+3</td></tr>
+      <tr><td>Half flush (one suit + honor tiles)</td><td>+3</td></tr>
+      <tr><td>Full flush (one suit only)</td><td>+6</td></tr>
+      <tr><td>Each dragon triplet</td><td>+1</td></tr>
+      <tr><td>Your own seat-wind triplet</td><td>+1</td></tr>
+    </table>
+    <p style="margin-top:10px">Each tai is worth 10 points. On a self-drawn win, each opponent pays that amount. On a win off a discard, the discarder alone pays triple.</p>
+  </div>
+
+  <div class="note-box">
+    This is a single-player prototype built to explore the design — there's no real backend, accounts, or money involved. Bot names are randomized each round, and you can change the table theme and bot pace from Settings (the ⚙ icon).
+  </div>
+</div>
+
+<script type="module">
+  import { mountProfileModal } from './js/profile.js';
+  import { mountSettingsModal } from './js/settings.js';
+  mountProfileModal();
+  mountSettingsModal();
+</script>
+</body>
+</html>

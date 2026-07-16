@@ -1,6 +1,8 @@
 import { MahjongGame, SEATS } from './engine.js';
 import { chooseDiscard } from './bot.js';
 import { createTileElement, sortHand } from './tiles.js';
+import { botDelayMultiplier } from './theme.js';
+import { recordRoundResult } from './profile.js';
 
 const SEAT_FULL = { E: 'East', S: 'South', W: 'West', N: 'North' };
 
@@ -29,7 +31,7 @@ const els = {
   btnPlayAgain: document.getElementById('btn-play-again'),
 };
 
-function delay(ms) { return new Promise((res) => setTimeout(res, ms)); }
+function delay(ms) { return new Promise((res) => setTimeout(res, ms * botDelayMultiplier())); }
 
 function render() {
   els.wallCount.textContent = `Wall: ${game.wall.length} left`;
@@ -217,11 +219,13 @@ function showRoundOver() {
   if (ro.type === 'draw') {
     els.roundOverTitle.textContent = 'Wall Exhausted';
     els.roundOverDesc.textContent = 'No one completed a hand this round. Scores are unchanged.';
+    recordRoundResult(false);
   } else {
     const winner = game.players[ro.winnerSeat];
     const label = ro.winnerSeat === 'E' ? 'You' : winner.name;
     els.roundOverTitle.textContent = ro.winnerSeat === 'E' ? 'You Win!' : `${label} Wins`;
     els.roundOverDesc.textContent = `${label} won ${ro.isSelfDraw ? 'by self-draw' : 'off a discard'} — ${ro.tai} tai, ${ro.points} points.`;
+    recordRoundResult(ro.winnerSeat === 'E');
   }
   els.roundOver.classList.add('show');
 }
