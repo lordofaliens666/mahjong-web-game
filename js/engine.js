@@ -1,9 +1,14 @@
-// Simplified Singapore-style mahjong engine: 4 sets + 1 pair win shape,
-// chi/pong/kong calling, basic tai scoring. Runs entirely client-side vs 3 bots.
+// Mahjong engine covering three rulesets:
+//  - singapore: simplified Singapore tai scoring (the original ruleset here)
+//  - hongkong: same 4-sets+1-pair shape, fan scoring with a 3-fan minimum to win
+//  - american: Jokers, no chi/kong, wins matched against an original pattern set
+// Runs entirely client-side vs 3 bots.
 import { buildWall, shuffle, tileName } from './tiles.js';
+import { matchAmericanHand } from './american.js';
 
 export const SEATS = ['E', 'S', 'W', 'N'];
 export const SEAT_WIND = { E: '東', S: '南', W: '西', N: '北' };
+export const RULESETS = ['singapore', 'hongkong', 'american'];
 
 const BOT_NAME_POOL = [
   'Amir', 'Su Mei', 'Farid', 'Wei Ling', 'Rajesh', 'Nadia',
@@ -76,16 +81,13 @@ function chiOptions(player, tile) {
   return opts.map((seq) => seq.map((num) => suitBase + num - 1));
 }
 
-function taiToPoints(tai) {
-  return tai * 10;
-}
-
 export class MahjongGame {
-  constructor() {
-    this.wall = shuffle(buildWall());
+  constructor(ruleset = 'singapore') {
+    this.ruleset = RULESETS.includes(ruleset) ? ruleset : 'singapore';
+    this.wall = shuffle(buildWall({ includeJokers: this.ruleset === 'american' }));
     this.discardPile = [];
     this.log = [];
-    this.roundOver = null; // {type:'win', winner, tai, points} | {type:'draw'}
+    this.roundOver = null; // {type:'win', winnerSeat, isSelfDraw, points, ...} | {type:'draw'}
     this.pendingCall = null; // {seat:'E', tile, discarderSeat, options}
     this.currentSeat = 'E';
     this.players = {};
@@ -111,18 +113,6 @@ export class MahjongGame {
     if (this.log.length > 200) this.log.shift();
   }
 
-  _drawReplacementsForFlowers(player) {
-    while (true) {
-      const last = player.hand[player.hand.length - 1];
-      if (!last || last.kind !== 'flower') break;
-      player.hand.pop();
-      player.flowers.push(last);
-      const next = this.wall.shift();
-      if (!next) break;
-      player.hand.push(next);
-    }
-  }
-
   _deal() {
     for (let round = 0; round < 13; round++) {
       for (const seat of SEATS) this.players[seat].hand.push(this.wall.shift());
@@ -141,6 +131,22 @@ export class MahjongGame {
     }
   }
 
+  // Whether `tiles` (a player's hand, possibly with one extra tile) is a legal win
+  // under the active ruleset. isSelfDraw only matters for Hong Kong's fan minimum.
+  _checkWin(seat, tiles, isSelfDraw) {
+    const player = this.players[seat];
+    if (this.ruleset === 'american') {
+      const allTiles = tiles.concat(player.melds.flatMap((m) => m.tiles));
+      return !!matchAmericanHand(allTiles);
+    }
+    if (!canWinShape(tiles, player.melds.length, false)) return false;
+    if (this.ruleset === 'hongkong') {
+      const allTiles = tiles.concat(player.melds.flatMap((m) => m.tiles));
+      return this._computeHongKongFan(player, allTiles, isSelfDraw).fan >= 3;
+    }
+    return true;
+  }
+
   // Draws a tile for the current seat. Returns {tile, selfWin, wallEmpty}.
   drawForCurrent() {
     const player = this.players[this.currentSeat];
@@ -155,7 +161,7 @@ export class MahjongGame {
       return { tile: null, selfWin: false, wallEmpty: true };
     }
     player.hand.push(tile);
-    const selfWin = canWinShape(player.hand, player.melds.length, false);
+    const selfWin = this._checkWin(this.currentSeat, player.hand, true);
     return { tile, selfWin, wallEmpty: false };
   }
 
@@ -177,15 +183,16 @@ export class MahjongGame {
   }
 
   _resolveDiscard(tile, discarderSeat) {
+    const isAmerican = this.ruleset === 'american';
     const options = {};
     for (const seat of SEATS) {
       if (seat === discarderSeat) continue;
       const p = this.players[seat];
       const opts = {};
-      if (canWinShape(p.hand.concat([tile]), p.melds.length, false)) opts.win = true;
-      if (canKong(p, tile)) opts.kong = true;
+      if (this._checkWin(seat, p.hand.concat([tile]), false)) opts.win = true;
+      if (!isAmerican && canKong(p, tile)) opts.kong = true;
       if (canPong(p, tile)) opts.pong = true;
-      if (seat === seatAfter(discarderSeat)) {
+      if (!isAmerican && seat === seatAfter(discarderSeat)) {
         const chi = chiOptions(p, tile);
         if (chi.length) opts.chi = chi;
       }
@@ -277,8 +284,7 @@ export class MahjongGame {
     return null;
   }
 
-  _finishRound(winner, isSelfDraw, discarderSeat) {
-    const allTiles = winner.hand.concat(winner.melds.flatMap((m) => m.tiles));
+  _computeSingaporeTai(winner, isSelfDraw, allTiles) {
     let tai = 1;
     if (isSelfDraw) tai += 1;
     if (winner.melds.length === 0) tai += 1;
@@ -296,8 +302,58 @@ export class MahjongGame {
     for (let i = 31; i <= 33; i++) if (counts[i] >= 3) tai += 1; // dragon triplet
     const seatWindIndex = 27 + SEATS.indexOf(winner.seat);
     if (counts[seatWindIndex] >= 3) tai += 1; // own seat wind triplet
+    return { fan: tai, label: 'tai' };
+  }
 
-    const points = taiToPoints(tai);
+  // Hong Kong fan table: no free base fan (unlike Singapore's tai), higher flush
+  // values, and both seat-wind AND round-wind (always East, single-round game)
+  // triplets score — a legal win needs at least 3 fan.
+  _computeHongKongFan(winner, allTiles, isSelfDraw) {
+    let fan = 0;
+    if (isSelfDraw) fan += 1;
+    if (winner.melds.length === 0) fan += 1;
+
+    const kinds = new Set(allTiles.filter((t) => t.typeIndex >= 0).map((t) => t.kind));
+    const suitKinds = [...kinds].filter((k) => k === 'dot' || k === 'bam' || k === 'char');
+    const hasHonor = kinds.has('wind') || kinds.has('dragon');
+    if (suitKinds.length === 1 && kinds.size <= (hasHonor ? 2 : 1)) fan += hasHonor ? 3 : 7;
+
+    if (winner.melds.every((m) => m.type !== 'chi') && canWinShape(winner.hand, winner.melds.length, true)) {
+      fan += 3;
+    }
+
+    const counts = countsOf(allTiles);
+    for (let i = 31; i <= 33; i++) if (counts[i] >= 3) fan += 1; // each dragon triplet
+    const seatWindIndex = 27 + SEATS.indexOf(winner.seat);
+    if (counts[seatWindIndex] >= 3) fan += 1; // own seat wind triplet
+    if (counts[27] >= 3) fan += 1; // round wind (always East, single-round game) — East seat + East wind triplet stacks both bonuses
+    return { fan, label: 'fan' };
+  }
+
+  _finishRound(winner, isSelfDraw, discarderSeat) {
+    const allTiles = winner.hand.concat(winner.melds.flatMap((m) => m.tiles));
+
+    if (this.ruleset === 'american') {
+      const pattern = matchAmericanHand(allTiles);
+      const base = pattern ? pattern.points : 20;
+      this._settleScore(winner, isSelfDraw, discarderSeat, base);
+      const total = isSelfDraw ? base : base * 3;
+      this.addLog(`${winner.name} won${isSelfDraw ? ' by self-draw' : ''} — "${pattern ? pattern.name : 'Hand'}" (${total} pts)`);
+      this.roundOver = { type: 'win', winnerSeat: winner.seat, isSelfDraw, patternName: pattern?.name, points: total };
+      return;
+    }
+
+    const { fan, label } = this.ruleset === 'hongkong'
+      ? this._computeHongKongFan(winner, allTiles, isSelfDraw)
+      : this._computeSingaporeTai(winner, isSelfDraw, allTiles);
+    const points = fan * 10;
+    this._settleScore(winner, isSelfDraw, discarderSeat, points);
+    const total = isSelfDraw ? points : points * 3;
+    this.addLog(`${winner.name} won${isSelfDraw ? ' by self-draw' : ''} — ${fan} ${label} (${total} pts)`);
+    this.roundOver = { type: 'win', winnerSeat: winner.seat, isSelfDraw, tai: fan, label, points: total };
+  }
+
+  _settleScore(winner, isSelfDraw, discarderSeat, points) {
     if (isSelfDraw) {
       for (const seat of SEATS) {
         if (seat === winner.seat) continue;
@@ -308,7 +364,5 @@ export class MahjongGame {
       this.players[discarderSeat].score -= points * 3;
       winner.score += points * 3;
     }
-    this.addLog(`${winner.name} won${isSelfDraw ? ' by self-draw' : ''} — ${tai} tai (${isSelfDraw ? points : points * 3} pts)`);
-    this.roundOver = { type: 'win', winnerSeat: winner.seat, isSelfDraw, tai, points: isSelfDraw ? points : points * 3 };
   }
 }

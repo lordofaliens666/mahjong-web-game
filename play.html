@@ -86,6 +86,10 @@
   .side-label { font-size: 11px; letter-spacing: .14em; color: var(--brown); text-transform: uppercase; }
   .log-list { display: flex; flex-direction: column; gap: 8px; font-size: 12.5px; color: var(--ink); }
   .log-list b { font-weight: 700; }
+  .patterns-section { display: none; border-bottom: 1px solid rgba(48,43,26,.1); padding-bottom: 16px; }
+  .patterns-section.show { display: block; }
+  .pattern-row { display: flex; justify-content: space-between; font-size: 12px; color: var(--ink); padding: 5px 0; }
+  .pattern-row .pts { color: var(--brown); font-weight: 600; }
   .scores-box { margin-top: auto; border-radius: 12px; background: #fff; border: 1px solid rgba(48,43,26,.08); padding: 14px; }
   .score-row { display: flex; justify-content: space-between; font-size: 12.5px; color: var(--ink); margin-bottom: 6px; }
   .score-row:last-child { margin-bottom: 0; }
@@ -108,7 +112,7 @@
 
 <div class="table-nav">
   <a href="lobby.html">← Leave Table</a>
-  <span class="brand">Jade Parlour</span>
+  <span class="brand" id="table-brand">Jade Parlour</span>
   <div class="nav-actions">
     <a href="rules.html" target="_blank" rel="noopener" title="Open rules in a new tab" style="margin-right:4px">Rules</a>
     <button class="nav-icon-btn" id="nav-settings-btn" type="button" title="Settings" aria-label="Settings">⚙</button>
@@ -157,6 +161,10 @@
   </div>
 
   <div class="side-panel">
+    <div class="patterns-section" id="patterns-section">
+      <div class="side-label" style="margin-bottom:8px">Hand Patterns</div>
+      <div id="patterns-list"></div>
+    </div>
     <div class="side-label">Game Log</div>
     <div class="log-list" id="log-list"></div>
     <div class="scores-box">

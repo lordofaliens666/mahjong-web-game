@@ -3,8 +3,11 @@ import { chooseDiscard } from './bot.js';
 import { createTileElement, sortHand } from './tiles.js';
 import { botDelayMultiplier } from './theme.js';
 import { recordRoundResult } from './profile.js';
+import { AMERICAN_PATTERNS } from './american.js';
 
 const SEAT_FULL = { E: 'East', S: 'South', W: 'West', N: 'North' };
+const RULESET_LABEL = { singapore: 'Singapore', hongkong: 'Hong Kong', american: 'American' };
+const ruleset = localStorage.getItem('mahjongRuleset') || 'singapore';
 
 let game;
 let awaitingHumanDiscard = false;
@@ -29,9 +32,25 @@ const els = {
   roundOverTitle: document.getElementById('round-over-title'),
   roundOverDesc: document.getElementById('round-over-desc'),
   btnPlayAgain: document.getElementById('btn-play-again'),
+  tableBrand: document.getElementById('table-brand'),
+  patternsSection: document.getElementById('patterns-section'),
+  patternsList: document.getElementById('patterns-list'),
 };
 
 function delay(ms) { return new Promise((res) => setTimeout(res, ms * botDelayMultiplier())); }
+
+function setupRulesetUi() {
+  els.tableBrand.textContent = `Jade Parlour · ${RULESET_LABEL[ruleset]}`;
+  if (ruleset !== 'american') return;
+  els.patternsSection.classList.add('show');
+  els.patternsList.innerHTML = '';
+  for (const pattern of AMERICAN_PATTERNS) {
+    const row = document.createElement('div');
+    row.className = 'pattern-row';
+    row.innerHTML = `<span>${pattern.name}</span><span class="pts">${pattern.points}</span>`;
+    els.patternsList.appendChild(row);
+  }
+}
 
 function render() {
   els.wallCount.textContent = `Wall: ${game.wall.length} left`;
@@ -224,7 +243,10 @@ function showRoundOver() {
     const winner = game.players[ro.winnerSeat];
     const label = ro.winnerSeat === 'E' ? 'You' : winner.name;
     els.roundOverTitle.textContent = ro.winnerSeat === 'E' ? 'You Win!' : `${label} Wins`;
-    els.roundOverDesc.textContent = `${label} won ${ro.isSelfDraw ? 'by self-draw' : 'off a discard'} — ${ro.tai} tai, ${ro.points} points.`;
+    const how = ro.isSelfDraw ? 'by self-draw' : 'off a discard';
+    els.roundOverDesc.textContent = ruleset === 'american'
+      ? `${label} won ${how} — "${ro.patternName || 'Hand'}", ${ro.points} points.`
+      : `${label} won ${how} — ${ro.tai} ${ro.label || 'tai'}, ${ro.points} points.`;
     recordRoundResult(ro.winnerSeat === 'E');
   }
   els.roundOver.classList.add('show');
@@ -232,7 +254,7 @@ function showRoundOver() {
 
 function startRound() {
   const previousScores = game ? Object.fromEntries(SEATS.map((s) => [s, game.players[s].score])) : null;
-  game = new MahjongGame();
+  game = new MahjongGame(ruleset);
   if (previousScores) for (const s of SEATS) game.players[s].score = previousScores[s];
   awaitingHumanDiscard = false;
   awaitingSelfWinDecision = false;
@@ -248,4 +270,5 @@ els.btnKong.addEventListener('click', onBtnKong);
 els.btnChi.addEventListener('click', onBtnChi);
 els.btnPlayAgain.addEventListener('click', startRound);
 
+setupRulesetUi();
 startRound();

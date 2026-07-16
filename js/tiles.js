@@ -14,8 +14,9 @@ const DRAGON_NAME = { '中': 'Red', '發': 'Green', '白': 'White' };
 export const WIND_LABELS = ['東', '南', '西', '北'];
 export const DRAGON_LABELS = ['中', '發', '白'];
 
-// typeIndex 0-33 identifies the 34 matchable tile types (flowers have no typeIndex).
-export function buildWall() {
+// typeIndex 0-33 identifies the 34 matchable tile types.
+// Flowers (-1) and jokers (-2) are bonus/wildcard tiles with no fixed type.
+export function buildWall({ includeJokers = false } = {}) {
   const tiles = [];
   let id = 0;
   ['dot', 'bam', 'char'].forEach((kind, si) => {
@@ -34,6 +35,11 @@ export function buildWall() {
   for (let n = 1; n <= 8; n++) {
     tiles.push({ id: id++, kind: 'flower', n, label: '', typeIndex: -1 });
   }
+  if (includeJokers) {
+    for (let n = 1; n <= 8; n++) {
+      tiles.push({ id: id++, kind: 'joker', n, label: '', typeIndex: -2 });
+    }
+  }
   return tiles;
 }
 
@@ -50,10 +56,11 @@ export function tileName(tile) {
   if (tile.kind === 'wind') return `${WIND_NAME[tile.label]} Wind`;
   if (tile.kind === 'dragon') return `${DRAGON_NAME[tile.label]} Dragon`;
   if (tile.kind === 'flower') return `Flower ${tile.n}`;
+  if (tile.kind === 'joker') return 'Joker';
   return 'Tile';
 }
 
-const KIND_ORDER = { dot: 0, bam: 1, char: 2, wind: 3, dragon: 4, flower: 5 };
+const KIND_ORDER = { dot: 0, bam: 1, char: 2, wind: 3, dragon: 4, flower: 5, joker: 6 };
 export function sortHand(tiles) {
   return [...tiles].sort((a, b) => {
     if (KIND_ORDER[a.kind] !== KIND_ORDER[b.kind]) return KIND_ORDER[a.kind] - KIND_ORDER[b.kind];
@@ -147,6 +154,16 @@ export function createTileElement(tile, { w = 56, h = 76, faceDown = false } = {
     honorLabelEl.style.cssText = `font-family:system-ui,sans-serif;font-size:${6.5 * scale}px;letter-spacing:0.12em;color:${INK};opacity:0.45;margin-top:${6 * scale}px;`;
     honorLabelEl.textContent = honorLabelText;
     root.appendChild(honorLabelEl);
+  } else if (kind === 'joker') {
+    const star = document.createElement('div');
+    star.style.cssText = `font-family:'Cormorant Garamond',serif;font-weight:800;font-size:${28 * scale}px;color:${GOLD};line-height:1;`;
+    star.textContent = '★';
+    root.appendChild(star);
+
+    const jokerLabel = document.createElement('div');
+    jokerLabel.style.cssText = `font-family:system-ui,sans-serif;font-size:${6.5 * scale}px;letter-spacing:0.12em;color:${INK};opacity:0.45;margin-top:${6 * scale}px;`;
+    jokerLabel.textContent = 'JOKER';
+    root.appendChild(jokerLabel);
   }
 
   return root;

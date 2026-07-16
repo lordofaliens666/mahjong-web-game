@@ -19,8 +19,7 @@
   .ruleset-opt.active { background: var(--plum); color: #fff; font-weight: 700; }
   .ruleset-opt:not(.active) { color: var(--ink); }
   .ruleset-opt:not(.active):hover { background: rgba(48, 43, 26, .06); }
-  .ruleset-note { font-size: 11.5px; color: var(--brown); margin: 8px 2px 0; line-height: 1.5; display: none; }
-  .ruleset-note.show { display: block; }
+  .ruleset-desc { font-size: 11.5px; color: var(--brown); margin: 8px 2px 0; line-height: 1.5; }
   .stakes-track { height: 4px; border-radius: 2px; background: #e2ddcf; position: relative; }
   .stakes-fill { position: absolute; left: 20%; right: 40%; top: 0; bottom: 0; background: var(--gold); border-radius: 2px; }
   .create-btn { margin-top: auto; padding: 13px; border-radius: 8px; border: none; background: var(--gold); color: var(--ink); font-weight: 700; font-size: 13px; cursor: pointer; }
@@ -54,10 +53,10 @@
   <div class="sidebar">
     <div>
       <div class="side-label">Ruleset</div>
-      <div class="ruleset-opt active" data-ruleset="singapore">Singapore</div>
+      <div class="ruleset-opt" data-ruleset="singapore">Singapore</div>
       <div class="ruleset-opt" data-ruleset="hongkong">Hong Kong</div>
       <div class="ruleset-opt" data-ruleset="american">American</div>
-      <p class="ruleset-note" id="ruleset-note">Only Singapore rules are actually implemented right now — matches will still play with Singapore scoring.</p>
+      <p class="ruleset-desc" id="ruleset-desc"></p>
     </div>
     <div>
       <div class="side-label">Stakes</div>
@@ -75,7 +74,7 @@
           <div class="avatar" style="background:#816a60"></div>
           <div class="avatar" style="background:#613c4e"></div>
         </div>
-        <div class="table-meta">Singapore · $0.50 stake</div>
+        <div class="table-meta"><span class="ruleset-label"></span> · $0.50 stake</div>
         <button class="join-btn" data-quick>Join Table</button>
       </div>
       <div class="table-card">
@@ -84,7 +83,7 @@
           <div class="avatar" style="background:#7c8850"></div>
           <div class="avatar" style="background:#4a2d3d"></div>
         </div>
-        <div class="table-meta">Singapore · $1 stake</div>
+        <div class="table-meta"><span class="ruleset-label"></span> · $1 stake</div>
         <button class="join-btn" data-quick>Join Table</button>
       </div>
       <div class="table-card" style="opacity:.5">
@@ -95,7 +94,7 @@
           <div class="avatar" style="background:#613c4e"></div>
           <div class="avatar" style="background:#302b1a"></div>
         </div>
-        <div class="table-meta">Singapore · Free</div>
+        <div class="table-meta"><span class="ruleset-label"></span> · Free</div>
         <button class="join-btn" disabled>Full</button>
       </div>
     </div>
@@ -106,21 +105,39 @@
 </div>
 
 <script>
+  const RULESET_KEY = 'mahjongRuleset';
+  const RULESET_LABEL = { singapore: 'Singapore', hongkong: 'Hong Kong', american: 'American' };
+  const RULESET_DESC = {
+    singapore: 'Classic Singapore tai scoring — no minimum tai to win.',
+    hongkong: 'Fan scoring with a 3-fan minimum required to declare a win.',
+    american: 'Jokers as wildcards, no chi calls — win by matching a hand pattern instead of 4 sets + a pair.',
+  };
+
+  function getSavedRuleset() {
+    return localStorage.getItem(RULESET_KEY) || 'singapore';
+  }
+
+  const rulesetOpts = document.querySelectorAll('.ruleset-opt');
+  const rulesetDesc = document.getElementById('ruleset-desc');
+  const rulesetLabels = document.querySelectorAll('.ruleset-label');
+
+  function selectRuleset(ruleset) {
+    rulesetOpts.forEach((o) => o.classList.toggle('active', o.dataset.ruleset === ruleset));
+    rulesetDesc.textContent = RULESET_DESC[ruleset];
+    rulesetLabels.forEach((el) => { el.textContent = RULESET_LABEL[ruleset]; });
+    localStorage.setItem(RULESET_KEY, ruleset);
+  }
+
+  rulesetOpts.forEach((opt) => {
+    opt.addEventListener('click', () => selectRuleset(opt.dataset.ruleset));
+  });
+  selectRuleset(getSavedRuleset());
+
   const params = new URLSearchParams(location.search);
   function goToTable() { location.href = 'play.html'; }
   document.getElementById('create-table').addEventListener('click', goToTable);
   document.querySelectorAll('[data-quick]').forEach((btn) => btn.addEventListener('click', goToTable));
   if (params.get('mode') === 'quick') goToTable();
-
-  const rulesetOpts = document.querySelectorAll('.ruleset-opt');
-  const rulesetNote = document.getElementById('ruleset-note');
-  rulesetOpts.forEach((opt) => {
-    opt.addEventListener('click', () => {
-      rulesetOpts.forEach((o) => o.classList.remove('active'));
-      opt.classList.add('active');
-      rulesetNote.classList.toggle('show', opt.dataset.ruleset !== 'singapore');
-    });
-  });
 </script>
 <script type="module">
   import { mountProfileModal } from './js/profile.js';

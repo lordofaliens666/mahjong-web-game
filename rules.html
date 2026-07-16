@@ -26,6 +26,17 @@
     background: var(--card); border: 1px solid rgba(48,43,26,.08); border-radius: 10px;
     padding: 14px 18px; font-size: 13px; color: var(--brown); line-height: 1.6;
   }
+  .ruleset-tabs { display: flex; gap: 8px; margin-bottom: 24px; }
+  .ruleset-tab {
+    padding: 8px 16px; border-radius: 20px; border: 1px solid rgba(48,43,26,.15);
+    background: transparent; color: var(--ink); font-size: 13px; font-weight: 600; cursor: pointer;
+  }
+  .ruleset-tab.active { background: var(--plum); color: #fff; border-color: var(--plum); }
+  .ruleset-panel { display: none; }
+  .ruleset-panel.show { display: block; }
+  .pattern-grid { display: grid; grid-template-columns: 1fr auto; gap: 2px 16px; font-size: 13.5px; margin-top: 8px; }
+  .pattern-grid .name { padding: 6px 0; border-bottom: 1px solid rgba(48,43,26,.06); }
+  .pattern-grid .pts { padding: 6px 0; border-bottom: 1px solid rgba(48,43,26,.06); text-align: right; color: var(--brown); font-weight: 600; }
 </style>
 </head>
 <body>
@@ -41,12 +52,7 @@
 
 <div class="rules-wrap">
   <h1>How to Play</h1>
-  <p class="lede">Jade Parlour plays a simplified version of Singapore-style mahjong. You sit East; three AI opponents fill South, West, and North.</p>
-
-  <div class="rules-section">
-    <h2>Objective</h2>
-    <p>Be the first to complete a winning hand: <strong>four sets</strong> (a triplet or a run of three) plus <strong>one pair</strong>, using 14 tiles total. You can win by drawing the final tile yourself (a self-draw) or by claiming someone else's discard.</p>
-  </div>
+  <p class="lede">Jade Parlour offers three rulesets, chosen in the Lobby before you sit down. You always sit East; three AI opponents fill South, West, and North.</p>
 
   <div class="rules-section">
     <h2>The Tiles</h2>
@@ -55,36 +61,64 @@
       <li><strong>Winds</strong> — East, South, West, North, four copies each.</li>
       <li><strong>Dragons</strong> — Red, Green, White, four copies each.</li>
       <li><strong>Flowers</strong> — 8 bonus tiles. Drawing one doesn't count toward your hand — it's set aside and you immediately draw a replacement.</li>
+      <li><strong>Jokers</strong> — American games only. 8 wildcard tiles that can substitute for any tile toward a hand pattern.</li>
     </ul>
   </div>
 
   <div class="rules-section">
-    <h2>Turn Flow</h2>
+    <h2>Turn Flow &amp; Calling</h2>
     <p>On your turn you draw a tile, then discard one. Play passes East → South → West → North → East. After any discard, other players may interrupt the normal turn order to call it:</p>
     <ul>
-      <li><strong>Pong</strong> — claim a discard to complete a triplet, if you hold a matching pair. Anyone can call it.</li>
-      <li><strong>Kong</strong> — claim a discard to complete a foursome, if you hold three matching tiles. You immediately draw a replacement tile.</li>
-      <li><strong>Chi</strong> — claim a discard to complete a run (sequence), if you hold two adjacent tiles. Only the player seated immediately after the discarder may call it.</li>
+      <li><strong>Pong</strong> — claim a discard to complete a triplet, if you hold a matching pair. Anyone can call it, in any ruleset.</li>
+      <li><strong>Kong</strong> — claim a discard to complete a foursome, if you hold three matching tiles. You immediately draw a replacement tile. <em>Singapore and Hong Kong only.</em></li>
+      <li><strong>Chi</strong> — claim a discard to complete a run, if you hold two adjacent tiles. Only the player seated immediately after the discarder may call it. <em>Singapore and Hong Kong only — American mahjong never allows chi; runs must be built from your own draws.</em></li>
       <li><strong>Win</strong> — claim a discard (or your own draw) to complete your hand.</li>
     </ul>
     <p>When more than one call is possible on the same discard, priority is <strong>Win &gt; Kong &gt; Pong &gt; Chi</strong>.</p>
   </div>
 
   <div class="rules-section">
-    <h2>Scoring (simplified)</h2>
-    <p>Winning hands are scored in <strong>tai</strong> (points of value), then converted to game points. This is a simplified subset of official Singapore scoring rules — not the full rule book.</p>
-    <table class="tai-table">
-      <tr><th>Condition</th><th>Tai</th></tr>
-      <tr><td>Base hand</td><td>1</td></tr>
-      <tr><td>Self-drawn win</td><td>+1</td></tr>
-      <tr><td>Fully concealed hand (no calls made)</td><td>+1</td></tr>
-      <tr><td>All triplets (no sequences)</td><td>+3</td></tr>
-      <tr><td>Half flush (one suit + honor tiles)</td><td>+3</td></tr>
-      <tr><td>Full flush (one suit only)</td><td>+6</td></tr>
-      <tr><td>Each dragon triplet</td><td>+1</td></tr>
-      <tr><td>Your own seat-wind triplet</td><td>+1</td></tr>
-    </table>
-    <p style="margin-top:10px">Each tai is worth 10 points. On a self-drawn win, each opponent pays that amount. On a win off a discard, the discarder alone pays triple.</p>
+    <h2>Scoring</h2>
+    <div class="ruleset-tabs">
+      <button class="ruleset-tab active" data-tab="singapore" type="button">Singapore</button>
+      <button class="ruleset-tab" data-tab="hongkong" type="button">Hong Kong</button>
+      <button class="ruleset-tab" data-tab="american" type="button">American</button>
+    </div>
+
+    <div class="ruleset-panel show" id="panel-singapore">
+      <p>Win shape: <strong>four sets</strong> (triplet or run) plus <strong>one pair</strong>, 14 tiles total. Scored in <strong>tai</strong>, no minimum required to win.</p>
+      <table class="tai-table">
+        <tr><th>Condition</th><th>Tai</th></tr>
+        <tr><td>Base hand</td><td>1</td></tr>
+        <tr><td>Self-drawn win</td><td>+1</td></tr>
+        <tr><td>Fully concealed hand</td><td>+1</td></tr>
+        <tr><td>All triplets (no sequences)</td><td>+3</td></tr>
+        <tr><td>Half flush (one suit + honors)</td><td>+3</td></tr>
+        <tr><td>Full flush (one suit only)</td><td>+6</td></tr>
+        <tr><td>Each dragon triplet</td><td>+1</td></tr>
+        <tr><td>Your own seat-wind triplet</td><td>+1</td></tr>
+      </table>
+    </div>
+
+    <div class="ruleset-panel" id="panel-hongkong">
+      <p>Same win shape as Singapore, but scored in <strong>fan</strong> — and you need <strong>at least 3 fan</strong> to legally declare a win at all (a complete-but-cheap hand must keep playing). Full flush is worth more than in Singapore; both your seat wind <em>and</em> the round wind (always East) can score, stacking to +2 for an East player holding an East-wind triplet.</p>
+      <table class="tai-table">
+        <tr><th>Condition</th><th>Fan</th></tr>
+        <tr><td>Self-drawn win</td><td>+1</td></tr>
+        <tr><td>Fully concealed hand</td><td>+1</td></tr>
+        <tr><td>All triplets (no sequences)</td><td>+3</td></tr>
+        <tr><td>Half flush (one suit + honors)</td><td>+3</td></tr>
+        <tr><td>Full flush (one suit only)</td><td>+7</td></tr>
+        <tr><td>Each dragon triplet</td><td>+1</td></tr>
+        <tr><td>Your own seat-wind triplet</td><td>+1</td></tr>
+        <tr><td>Round-wind (East) triplet</td><td>+1</td></tr>
+      </table>
+    </div>
+
+    <div class="ruleset-panel" id="panel-american">
+      <p>A genuinely different game: instead of a generic 4-sets-and-a-pair shape, your 14 tiles must match one of the named patterns below exactly (an original, simplified set — not the real, copyrighted NMJL card). <strong>Jokers</strong> can substitute for any tile anywhere, including in the pair. Each pattern has a fixed point value.</p>
+      <div class="pattern-grid" id="american-pattern-grid"></div>
+    </div>
   </div>
 
   <div class="note-box">
@@ -95,8 +129,31 @@
 <script type="module">
   import { mountProfileModal } from './js/profile.js';
   import { mountSettingsModal } from './js/settings.js';
+  import { AMERICAN_PATTERNS } from './js/american.js';
+
   mountProfileModal();
   mountSettingsModal();
+
+  const grid = document.getElementById('american-pattern-grid');
+  for (const pattern of AMERICAN_PATTERNS) {
+    const name = document.createElement('div');
+    name.className = 'name';
+    name.textContent = pattern.name;
+    const pts = document.createElement('div');
+    pts.className = 'pts';
+    pts.textContent = pattern.points;
+    grid.append(name, pts);
+  }
+
+  const tabs = document.querySelectorAll('.ruleset-tab');
+  tabs.forEach((tab) => {
+    tab.addEventListener('click', () => {
+      tabs.forEach((t) => t.classList.remove('active'));
+      tab.classList.add('active');
+      document.querySelectorAll('.ruleset-panel').forEach((p) => p.classList.remove('show'));
+      document.getElementById(`panel-${tab.dataset.tab}`).classList.add('show');
+    });
+  });
 </script>
 </body>
 </html>
